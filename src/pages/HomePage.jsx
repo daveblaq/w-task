@@ -1,14 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import {
-  fetchData,
-  userSelector,
-  clearState,
-} from "../components/redux/slices/dataReducer";
-import SearchBox from "../components/Home/SearchBox";
 import { RiSoundModuleLine } from "react-icons/ri";
-import Pagination from "../components/Home/Pagination";
-import Filter from "../components/Home/Filter";
+import { useDispatch, useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 import {
   filmHeader,
   peopleHeader,
@@ -17,6 +10,14 @@ import {
   starshipsHeader,
   vehiclesHeader,
 } from "../components/data/headerData";
+import Filter from "../components/Home/Filter";
+import Pagination from "../components/Home/Pagination";
+import SearchBox from "../components/Home/SearchBox";
+import {
+  clearState,
+  fetchData,
+  userSelector,
+} from "../components/redux/slices/dataReducer";
 
 const HomePage = () => {
   const [filterValue, setFilterValue] = useState("Films");
@@ -28,40 +29,39 @@ const HomePage = () => {
     "Starships",
     "Vehicles",
   ];
-
-  
+  const [headers, setHeaders] = useState([]);
 
   // Type variable to store different array for different Table Header
-  let type = null;
+  // let type = null;
 
   // This will be used to create set of options that user will see
-  let options = null;
+  // let options = null;
 
   // Setting Type variable according to Filter dropdown
-  if (filterValue === "Films") {
-    type = filmHeader;
-  } else if (filterValue === "People") {
-    type = peopleHeader;
-  } else if (filterValue === "Planets") {
-    type = planetsHeader;
-  } else if (filterValue === "Species") {
-    type = speciesHeader;
-  } else if (filterValue === "Starships") {
-    type = starshipsHeader;
-  } else if (filterValue === "Vehicles") {
-    type = vehiclesHeader;
-  }
+  // if (filterValue === "Films") {
+  //   type = filmHeader;
+  // } else if (filterValue === "People") {
+  //   type = peopleHeader;
+  // } else if (filterValue === "Planets") {
+  //   type = planetsHeader;
+  // } else if (filterValue === "Species") {
+  //   type = speciesHeader;
+  // } else if (filterValue === "Starships") {
+  //   type = starshipsHeader;
+  // } else if (filterValue === "Vehicles") {
+  //   type = vehiclesHeader;
+  // }
 
-  if (type) {
-    options = type.map((el) => (
-      <th
-        className="p-3 text-sm font-semibold text-white tracking-wide text-left"
-        key={el}
-      >
-        {el}
-      </th>
-    ));
-  }
+  // if (type) {
+  //   options = type.map((el) => (
+  //     <th
+  //       className="p-3 text-sm font-semibold text-white tracking-wide text-left"
+  //       key={el}
+  //     >
+  //       {el}
+  //     </th>
+  //   ));
+  // }
 
   const dispatch = useDispatch();
 
@@ -69,17 +69,24 @@ const HomePage = () => {
     useSelector(userSelector);
   const { feeds } = useSelector(userSelector);
 
-  console.log(filterValue);
   useEffect(() => {
     dispatch(fetchData(filterValue.toLowerCase()));
   }, [dispatch, filterValue]);
 
-  console.log(feeds);
+  useEffect(() => {
+    if (feeds) {
+      setHeaders([]);
+      Object.entries(feeds.payload.results[0]).forEach(([key]) => {
+        setHeaders((prevState) => [...prevState, key]);
+      });
+    }
+  }, [feeds]);
+
   useEffect(() => {
     if (isError) {
       dispatch(clearState());
     }
-  }, [isError]);
+  }, [isError, dispatch]);
 
   const search = (value) => {
     console.log(value);
@@ -89,10 +96,16 @@ const HomePage = () => {
     return (
       <thead className="bg-blue-400 border-b-2 border-gray-200 hover:w-full">
         <tr>
-          {
-            /** This is where we have used our options variable */
-            options
-          }
+          {headers.map((header) => {
+            return (
+              <th
+                className="p-3 text-sm font-semibold text-white tracking-wide text-left capitalize"
+                key={header}
+              >
+                {header}
+              </th>
+            );
+          })}
         </tr>
       </thead>
     );
@@ -100,9 +113,9 @@ const HomePage = () => {
 
   return (
     <>
-      <div className="p-1 h-screen flex items-center grid justify-items-center">
+      <div className="p-1 min-h-screen w-full py-5 grid items-center justify-items-center">
         <div
-          className="overflow-auto rounded-xl shadow"
+          className="overflow-hidden w-full rounded-xl shadow"
           style={{ width: "90%" }}
         >
           <SearchBox handleSearch={search} />
@@ -112,7 +125,7 @@ const HomePage = () => {
               <RiSoundModuleLine size={18} className="text-sm text-blue-400" />
 
               <select
-                className="bg-blue-50"
+                className="bg-blue-50 outline-none"
                 onChange={(e) => {
                   setFilterValue(e.target.value);
                 }}
@@ -124,14 +137,47 @@ const HomePage = () => {
               </select>
             </div>
           </div>
-          <div className="mx-2 my-2">
+          <div className="mx-2 my-2 max-w-full w-full overflow-auto">
             <table className="table-auto w-full hover:w-full ">
               <TableHead />
               <tbody className="divide-y divide-blue-200 divide-dashed">
                 {feeds &&
                   feeds.payload.results.map((feed, index) => (
-                    <tr className="bg-white even:bg-gray-50" key={index}>
-                      <td className="p-3 text-sm text-gray-700 whitespace-nowrap">
+                    <tr
+                      className="bg-white even:bg-gray-50 max-w-full"
+                      key={index}
+                    >
+                      {headers.map((fd, i) => (
+                        <td
+                          key={fd + i}
+                          className="p-3 text-sm max-w-xs whitespace-nowrap overflow-auto text-gray-700"
+                        >
+                          {Array.isArray(feed[fd])
+                            ? feed[fd].map((value, i) => {
+                                if (value.includes("https://")) {
+                                  return (
+                                    <span key={value}>
+                                      <a
+                                        href={value}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                      >
+                                        {value}
+                                      </a>
+                                      <span>;&nbsp;</span>
+                                    </span>
+                                  );
+                                }
+                                return (
+                                  <span key={value}>
+                                    <span>{value};&nbsp;</span>
+                                  </span>
+                                );
+                              })
+                            : feed[fd]}
+                        </td>
+                      ))}
+                      {/* <td className="p-3 text-sm text-gray-700 whitespace-nowrap">
                         {feed.title}
                       </td>
                       <td className="p-3 text-sm text-gray-700">
@@ -142,13 +188,13 @@ const HomePage = () => {
                       </td>
                       <td className="p-3 text-sm text-gray-700">
                         {feed.release_date}
-                      </td>
+                      </td> */}
                     </tr>
                   ))}
               </tbody>
             </table>
-            <Pagination />
           </div>
+          <Pagination />
         </div>
       </div>
     </>

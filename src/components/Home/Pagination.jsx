@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect } from "react";
 
 const Pagination = () => {
   // useEffect(() => {
@@ -7,7 +7,7 @@ const Pagination = () => {
   //   }
   // }, [slice, page, setPage]);
   return (
-    <div className="my-8 flex items-end justify-end">
+    <div className="my-8 flex items-end justify-end pr-3">
       {/* {range.map((el, index) => ( */}
       <div className={`px-5 py-2 bg-blue-400`}>
         <h2 className="text-sm text-wh"> Prev </h2>
